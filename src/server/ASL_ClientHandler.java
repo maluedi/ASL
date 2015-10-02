@@ -9,7 +9,7 @@ import java.sql.*;
 
 
 
-public class ASL_ServerThread extends Thread {
+public class ASL_ClientHandler implements Runnable {
 	private Socket socket = null;
 	
 	private ASL_ConnectionPool pool;
@@ -26,8 +26,7 @@ public class ASL_ServerThread extends Thread {
 //		this.dbPassword = password;
 //	}
 	
-	public ASL_ServerThread(Socket socket, ASL_ConnectionPool pool){
-		super("ASL_ServerThread");
+	public ASL_ClientHandler(Socket socket, ASL_ConnectionPool pool){
 		this.socket = socket;
 		this.pool = pool;
 	}
