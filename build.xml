@@ -1,0 +1,67 @@
+<project name="ASL" default="run_server" basedir=".">
+
+  <!-- set global properties for this build -->
+  <property name="src.dir"    location="src"/>
+  <property name="build.dir"  location="bin"/>
+  <property name="lib.dir"    location="lib"/>
+  <property name="postgresql"  value="postgresql-9.4-1203.jdbc42"/>
+  <property name="client" 	   value="ASL_Client"/>
+  <property name="server"      value="ASL_Server"/>
+  <property name="client-main" value="client.${client}"/>
+  <property name="server-main" value="server.${server}"/>
+
+  <target name="compile_client" description="compiles the source">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <mkdir dir="${build.dir}/client"/>
+    <javac srcdir="${src.dir}/client" destdir="${build.dir}" includeantruntime="false" />
+  </target>
+  
+  <target name="compile_server" description="compiles the source">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <mkdir dir="${build.dir}/server"/>
+    <javac srcdir="${src.dir}/server" destdir="${build.dir}" includeantruntime="false" />
+  </target>
+
+  <target name="jar_client" depends="compile_client" description="generate a jar executable" >
+    <!-- Put everything in into a executable jar file -->
+    <jar jarfile="${build.dir}/${client}.jar" basedir="${build.dir}" filesetmanifest="mergewithoutmain">
+	  <manifest>
+	    <attribute name="Main-Class" value="${client-main}"/>
+		<attribute name="Class-Path" value="."/>
+	  </manifest>
+	  <fileset dir="${build.dir}"/>
+	</jar>
+  </target>
+  
+  <target name="jar_server" depends="compile_server" description="generate a jar executable" >
+    <!-- Put everything in into a executable jar file -->
+	<jar jarfile="${build.dir}/${server}.jar" basedir="${build.dir}" filesetmanifest="mergewithoutmain">
+	  <manifest>
+	    <attribute name="Main-Class" value="${server-main}"/>
+		<attribute name="Class-Path" value="."/>
+	  </manifest>
+	  <fileset dir="${build.dir}"/>
+	  <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/${postgresql}.jar"/>
+	</jar>
+  </target>
+
+  <target name="run_client" depends="jar_client" description="run the client" >
+    <java jar="${build.dir}/${client}.jar" fork="true">
+      <arg value="${host}"/>
+      <arg value="${port}"/>
+	  <arg value="${message}"/>
+    </java>
+  </target>
+  
+  <target name="run_server" depends="jar_server" description="run the server" >
+    <java jar="${build.dir}/${server}.jar" fork="true">
+	  <arg value="${port}"/>
+	</java>
+  </target>
+
+  <target name="clean" description="clean up" >
+    <!-- Delete the ${build} directory and the jar file -->
+    <delete dir="${build.dir}"/>
+  </target>
+
+</project>
