@@ -14,18 +14,6 @@ public class ASL_ClientHandler implements Runnable {
 	
 	private ASL_ConnectionPool pool;
 	
-//	private String dbUrl;
-//	private String dbUser;
-//	private String dbPassword;
-	
-//	public ASL_ServerThread(Socket socket, String url, String user, String password){
-//		super("ASL_ServerThread");
-//		this.socket = socket;
-//		this.dbUrl = url;
-//		this.dbUser = user;
-//		this.dbPassword = password;
-//	}
-	
 	public ASL_ClientHandler(Socket socket, ASL_ConnectionPool pool){
 		this.socket = socket;
 		this.pool = pool;
@@ -33,8 +21,6 @@ public class ASL_ClientHandler implements Runnable {
 	
 	public void run() {
 		try (
-//			PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
-//			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
@@ -49,7 +35,7 @@ public class ASL_ClientHandler implements Runnable {
 			ResultSet rs = null;
 			
 			try{
-				conn = pool.borrowConnection();//DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+				conn = pool.borrowConnection();
 				st = conn.createStatement();
 				rs = st.executeQuery("SELECT VERSION()");
 				if(rs.next()){
