@@ -18,4 +18,5 @@ public class ASL_Util {
 	public static final int SENDER_DOES_NOT_EXIST = 2;
 	public static final int RECEIVER_DOES_NOT_EXIST = 3;
 	public static final int QUEUE_IS_EMPTY = 4;
+	public static final int NO_MESSAGE_FROM_SENDER = 5;
 }

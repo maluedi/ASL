@@ -31,7 +31,7 @@ public class ASL_Client {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			out.writeByte(ASL_Util.RUSER);
+			out.writeByte(ASL_Util.RUSER);	//register new user
 			out.flush();
 			int err = in.readByte();
 			if(err == 0){
@@ -75,7 +75,7 @@ public class ASL_Client {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			out.writeByte(ASL_Util.CQUEUE);
+			out.writeByte(ASL_Util.CQUEUE);	//create queue
 			out.flush();
 			int err = in.readByte();
 			if(err == 0){
@@ -98,8 +98,8 @@ public class ASL_Client {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			out.writeByte(ASL_Util.DQUEUE);
-			out.writeInt(queue);
+			out.writeByte(ASL_Util.DQUEUE);	//delete queue
+			out.writeInt(queue);			//queue
 			out.flush();
 			int err = in.readByte();
 			if(err != 0){
@@ -118,11 +118,11 @@ public class ASL_Client {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			out.writeByte(ASL_Util.PUSH);
-			out.writeInt(queue);
-			out.writeInt(this.id);
-			out.writeInt(receiver);
-			out.writeUTF(message);
+			out.writeByte(ASL_Util.PUSH);	//push
+			out.writeInt(queue);			//queue
+			out.writeInt(this.id);			//sender
+			out.writeInt(receiver);			//receiver
+			out.writeUTF(message);			//message
 			out.flush();
 			int err = in.readByte();
 			if(err != 0){
@@ -146,7 +146,10 @@ public class ASL_Client {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			out.writeByte(ASL_Util.POLL);
+			out.writeByte(ASL_Util.POLL);	//poll
+			out.writeInt(queue);			//queue
+			out.writeInt(sender);			//sender
+			out.writeInt(this.id);			//receiver
 			out.flush();
 			int err = in.readByte();
 			if(err == 0){
@@ -178,29 +181,130 @@ public class ASL_Client {
 		return poll(queue,0);
 	}
 	
-	public String peek(int queue, int sender){
-		return "";
+	public ASL_Message peek(int queue, int sender) throws ASL_Exception{
+		ASL_Message result = null;
+		try(
+			Socket socket = new Socket(hostName,portNumber);
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		) {
+			out.writeByte(ASL_Util.PEEK);	//peek
+			out.writeInt(queue);			//queue
+			out.writeInt(sender);			//sender
+			out.writeInt(this.id);			//receiver
+			out.flush();
+			int err = in.readByte();
+			if(err == 0){
+				int q = in.readInt();
+				int s = in.readInt();
+				int r = in.readInt();
+				String ts = in.readUTF();
+				Date t = null;
+				try {
+					t = df.parse(ts);
+				} catch (ParseException e) {
+					System.err.println("Could not parse timestamp: " + ts);
+				}
+				String m = in.readUTF();
+				result = new ASL_Message(q,s,r,t,m);
+			} else {
+				throw new ASL_Exception(err);
+			}
+		} catch (UnknownHostException e) {
+			System.err.println("Unknown host: " + hostName);
+		} catch (IOException e1) {
+			System.err.println("I/O exception on connection to " + hostName);
+		} 
+		
+		return result;
 	}
 	
-	public String peek(int queue){
-		return peek(queue, -1);
+	public ASL_Message peek(int queue) throws ASL_Exception{
+		return peek(queue, 0);
 	}
 	
 	public int[] getQueues(){
-		return null;
+		int[] result = null;
+		try(
+			Socket socket = new Socket(hostName,portNumber);
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		) {
+			out.writeByte(ASL_Util.GQUEUE);	//get queues
+			out.writeInt(this.id);			//receiver
+			out.flush();
+			int err = in.readByte();
+			if(err == 0) {
+				int n = in.readInt();
+				result = new int[n];
+				for(int i = 0; i < n; i++){
+					result[i] = in.readInt();
+				}
+			} else {
+				throw new ASL_Exception(err);
+			}
+		} catch (UnknoknHostException e) {
+			System.err.println("Unknown host: " + hostName);
+		} catch (IOException e1) {
+			System.err.println("I/O exception on connection to " + hostName);
+		} 
+			
+			
+		return result;
+	}
+	
+	public ASL_Message getMessage(int sender) {
+		ASL_Message result = null;
+		try(
+			Socket socket = new Socket(hostName,portNumber);
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+		) {
+			out.writeByte(ASL_Util.GMSG);	//get message from sender
+			out.writeInt(sender);			//sender
+			out.writeInt(this.id);			//receiver
+			out.flush();
+			int err = in.readByte();
+			if(err == 0){
+				int q = in.readInt();
+				int s = in.readInt();
+				int r = in.readInt();
+				String ts = in.readUTF();
+				Date t = null;
+				try {
+					t = df.parse(ts);
+				} catch (ParseException e) {
+					System.err.println("Could not parse timestamp: " + ts);
+				}
+				String m = in.readUTF();
+				result = new ASL_Message(q,s,r,t,m);
+			} else {
+				throw new ASL_Exception(err);
+			}
+		} catch (UnknownHostException e) {
+			System.err.println("Unknown host: " + hostName);
+		} catch (IOException e1) {
+			System.err.println("I/O exception on connection to " + hostName);
+		} 
+		
+		return result;
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 3){
-			System.err.println("Usage: ASL_Client <host> <port> <message>");
+		if (args.length < 2){
+			System.err.println("Usage: ASL_Client <host> <port>");
 			System.exit(-1);
 		}
 		String host = args[0];
 		int port = Integer.parseInt(args[1]);
-		String message = args[2];
 		
 		ASL_Client client = new ASL_Client(host,port);
-		client.send(message);
+		try {
+			client.register();
+		} catch(Exception e) {
+			System.err.println(e.getLocalizedMessage);
+			System.exit(-1);
+		}
 	}
 
 }

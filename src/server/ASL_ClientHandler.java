@@ -10,6 +10,7 @@ import java.sql.*;
 
 
 public class ASL_ClientHandler implements Runnable {
+
 	private Socket socket = null;
 	
 	private ASL_ConnectionPool pool;
@@ -24,20 +25,103 @@ public class ASL_ClientHandler implements Runnable {
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
-			System.out.println("Received message: " + in.readUTF());
-			
-			String response = "";
+			int command = in.readByte();
+			int queue,sender,receiver;
+			String message = "";
+			String sql = "";
+			switch(command){
+			case 1:	//push
+				queue = in.readInt();
+				sender = in.readInt();
+				receiver = in.readInt();
+				message = in.readUTF();
+				if(receiver == 0){
+					sql = ("select push_message("
+							+ queue + ","
+							+ sender + ","
+							+ message + 
+						");");				
+				} else {
+					sql = ("select push_message("
+							+ queue + ","
+							+ sender + ","
+							+ sender + ","
+							+ message + 
+						");");
+				}
+				break;
+			case 2: //poll
+				queue = in.readInt();
+				sender = in.readInt();
+				receiver = in.readInt();
+				if (sender == 0){
+					sql = ("select * from poll_message("
+							+ queue + ","
+							+ receiver + 
+						");");	
+				} else {
+					sql = ("select * from poll_message("
+							+ queue + ","
+							+ sender + ","
+							+ receiver + 
+						");");	
+				}
+				break;
+			case 3: //peek
+				queue = in.readInt();
+				sender = in.readInt();
+				receiver = in.readInt();
+				if (sender == 0){
+					sql = ("select * from peek_message("
+							+ queue + ","
+							+ receiver + 
+						");");	
+				} else {
+					sql = ("select * from peek_message("
+							+ queue + ","
+							+ sender + ","
+							+ receiver + 
+						");");	
+				}
+				break;
+			case 4: //create queue
+				sql = "select * from create_queue()";
+				break;
+			case 5: //delete queue
+				queue = in.readInt();
+				sql = ("select delete_queue(" 
+						+ queue +
+					");");
+				break;
+			case 6: //get queues
+				receiver = in.readInt();
+				sql = ("select * from get_queues(" 
+						+ receiver +
+					");");
+				break;
+			case 7: //get message from sender
+				sender = in.readInt();
+				receiver = in.readInt();
+				sql = ("select * from get_message("
+						+ sender + ","
+						+ receiver + 
+					");");	
+				break;
+			case 8: //register user
+				sql = "select * from register_user();";
+				break;
+			}
 			
 			//--------sql---------
 			
 			Connection conn = null;
-			Statement st = null;
+			PreparedStatement pst = null;
 			ResultSet rs = null;
 			
 			try{
 				conn = pool.borrowConnection();
 				st = conn.createStatement();
-				rs = st.executeQuery("SELECT VERSION()");
+				rs = st.executeQuery(sql);
 				if(rs.next()){
 					response = rs.getString(1);
 				}
