@@ -117,6 +117,41 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+--peek a message from a queue from a particular sender
+CREATE OR REPLACE FUNCTION peek_message(qID integer, sID integer, rID integer)
+  RETURNS messages AS $$
+DECLARE
+  res messages%ROWTYPE;
+BEGIN
+  PERFORM id FROM queues WHERE id = qID;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'queue does not exist: %', qID
+	  USING ERRCODE = '23101';
+  END IF;
+  PERFORM id FROM users WHERE id = sID;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'sender does not exist: %', sID
+	  USING ERRCODE = '23102';
+  END IF;
+  PERFORM id FROM users WHERE id = rID;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'receiver does not exist: %', rID
+	  USING ERRCODE = '23103';
+  END IF;
+  SELECT INTO res * FROM messages 
+    WHERE queue = qID
+	  AND sender = sID
+	  AND (receiver = rID OR receiver IS NULL)
+	ORDER BY entrytime ASC
+	LIMIT 1;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'queue is empty: %', qID
+	  USING ERRCODE = '23104';
+  END IF;
+  RETURN res;
+END;
+$$ LANGUAGE plpgsql;
+
 --poll a message from a queue
 CREATE OR REPLACE FUNCTION poll_message(qID integer, rID integer)
   RETURNS messages AS $$
@@ -150,6 +185,45 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+--poll a message from a queue from a particular sender
+CREATE OR REPLACE FUNCTION poll_message(qID integer, sID integer, rID integer)
+  RETURNS messages AS $$
+DECLARE
+  resID integer;
+  res messages%ROWTYPE;
+BEGIN
+  PERFORM id FROM queues WHERE id = qID;
+  IF NOT FOUND THEN
+	RAISE EXCEPTION 'queue does not exist: %', qID
+	  USING ERRCODE = '23101';
+  END IF;
+  PERFORM id FROM users WHERE id = sID;
+  IF NOT FOUND THEN
+	RAISE EXCEPTION 'sender does not exist: %', rID
+	  USING ERRCODE = '23102';
+  END IF;
+  PERFORM id FROM users WHERE id = rID;
+  IF NOT FOUND THEN
+	RAISE EXCEPTION 'receiver does not exist: %', rID
+	  USING ERRCODE = '23103';
+  END IF;
+  SELECT INTO resID id FROM messages
+	WHERE queue = qID
+	  AND sender = sID
+	  AND (receiver = rID OR receiver IS NULL)
+	ORDER BY entrytime ASC
+	LIMIT 1;
+  IF NOT FOUND THEN
+	RAISE EXCEPTION 'queue is empty: %', qID
+	  USING ERRCODE = '23104';
+  END IF;
+  DELETE FROM messages
+	WHERE id = resID
+	RETURNING * INTO res;
+  RETURN res;
+END;
+$$ LANGUAGE plpgsql;
+
 --get queues with messages for a particular receiver
 CREATE OR REPLACE FUNCTION get_queues(rID integer)
   RETURNS SETOF queues AS $$
@@ -159,7 +233,7 @@ $$ LANGUAGE SQL;
 
 --get a message from a particular sender
 CREATE OR REPLACE FUNCTION get_message(sID integer, rID integer)
-  RETURNS messages AS $$
+  RETURNS SETOF messages AS $$
   SELECT * FROM messages
     WHERE sender = sID
 	  AND (receiver = rID OR receiver IS NULL)

@@ -13,7 +13,7 @@ public class ASL_Util {
 	public static final int RUSER = 8;
 	
 	//error codes
-	public static final int INTERNAL_ERROR = 0;
+	public static final int INTERNAL_ERROR = 6;
 	public static final int QUEUE_DOES_NOT_EXIST = 1;
 	public static final int SENDER_DOES_NOT_EXIST = 2;
 	public static final int RECEIVER_DOES_NOT_EXIST = 3;

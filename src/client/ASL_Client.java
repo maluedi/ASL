@@ -2,10 +2,10 @@ package client;
 
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+//import java.text.DateFormat;
+//import java.text.ParseException;
+//import java.text.SimpleDateFormat;
+//import java.util.Date;
 import java.io.*;
 
 import util.ASL_Exception;
@@ -17,12 +17,12 @@ public class ASL_Client {
 	private String hostName;
 	private int portNumber;
 	private int id;
-	private DateFormat df;
+	//private DateFormat df;
 	
 	public ASL_Client(String hostName, int portNumber){
 		this.hostName = hostName;
 		this.portNumber = portNumber;
-		this.df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSXXX");
+		//this.df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSXXX");
 	}
 	
 	public void register() throws ASL_Exception{
@@ -156,13 +156,13 @@ public class ASL_Client {
 				int q = in.readInt();
 				int s = in.readInt();
 				int r = in.readInt();
-				String ts = in.readUTF();
-				Date t = null;
-				try {
-					t = df.parse(ts);
-				} catch (ParseException e) {
-					System.err.println("Could not parse timestamp: " + ts);
-				}
+				String t = in.readUTF();
+//				Date t = null;
+//				try {
+//					t = df.parse(ts);
+//				} catch (ParseException e) {
+//					System.err.println("Could not parse timestamp: " + ts);
+//				}
 				String m = in.readUTF();
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -177,7 +177,7 @@ public class ASL_Client {
 		return result;
 	}
 	
-	public ASL_Message pop(int queue) throws ASL_Exception{
+	public ASL_Message poll(int queue) throws ASL_Exception{
 		return poll(queue,0);
 	}
 	
@@ -198,13 +198,13 @@ public class ASL_Client {
 				int q = in.readInt();
 				int s = in.readInt();
 				int r = in.readInt();
-				String ts = in.readUTF();
-				Date t = null;
-				try {
-					t = df.parse(ts);
-				} catch (ParseException e) {
-					System.err.println("Could not parse timestamp: " + ts);
-				}
+				String t = in.readUTF();
+//				Date t = null;
+//				try {
+//					t = df.parse(ts);
+//				} catch (ParseException e) {
+//					System.err.println("Could not parse timestamp: " + ts);
+//				}
 				String m = in.readUTF();
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -223,7 +223,7 @@ public class ASL_Client {
 		return peek(queue, 0);
 	}
 	
-	public int[] getQueues(){
+	public int[] getQueues() throws ASL_Exception{
 		int[] result = null;
 		try(
 			Socket socket = new Socket(hostName,portNumber);
@@ -243,7 +243,7 @@ public class ASL_Client {
 			} else {
 				throw new ASL_Exception(err);
 			}
-		} catch (UnknoknHostException e) {
+		} catch (UnknownHostException e) {
 			System.err.println("Unknown host: " + hostName);
 		} catch (IOException e1) {
 			System.err.println("I/O exception on connection to " + hostName);
@@ -253,7 +253,7 @@ public class ASL_Client {
 		return result;
 	}
 	
-	public ASL_Message getMessage(int sender) {
+	public ASL_Message getMessage(int sender) throws ASL_Exception {
 		ASL_Message result = null;
 		try(
 			Socket socket = new Socket(hostName,portNumber);
@@ -269,13 +269,13 @@ public class ASL_Client {
 				int q = in.readInt();
 				int s = in.readInt();
 				int r = in.readInt();
-				String ts = in.readUTF();
-				Date t = null;
-				try {
-					t = df.parse(ts);
-				} catch (ParseException e) {
-					System.err.println("Could not parse timestamp: " + ts);
-				}
+				String t = in.readUTF();
+//				Date t = null;
+//				try {
+//					t = df.parse(ts);
+//				} catch (ParseException e) {
+//					System.err.println("Could not parse timestamp: " + ts);
+//				}
 				String m = in.readUTF();
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -301,8 +301,45 @@ public class ASL_Client {
 		ASL_Client client = new ASL_Client(host,port);
 		try {
 			client.register();
+			System.out.println("your id is: " + client.getId());
+			int q = client.createQueue();
+			int q2 = client.createQueue();
+			int q3 = client.createQueue();
+			System.out.println("you created queue: " + q);
+			client.push(q, "test message");
+			System.out.println("sent message 'test message' to queue " + q);
+			client.push(q, client.getId(), "message to receiver " + client.getId());
+			//client.push(q2, client.getId(), "message to queue " + q2);
+			//client.push(q3, client.getId(), "message to queue " + q3);
+			System.out.println("sent message 'test message' to queue " + q + " and receiver " + client.getId());
+			ASL_Message m = client.peek(q);
+			System.out.println("peeked message: \n" + m.toString());
+			m = client.poll(q);
+			System.out.println("polled message: \n" + m.toString());
+			m = client.poll(q,client.getId());
+			System.out.println("polled message: \n" + m.toString());
+			int[] qs = client.getQueues();
+			if(qs.length > 0){
+				System.out.print("you have messages on queues: ");
+				for (int i = 0; i < qs.length; i++){
+					if(i == qs.length - 2){
+						System.out.print(qs[i] + " and ");
+					} else if(i == qs.length - 1){
+						System.out.println(qs[i]);
+					} else {
+						System.out.print(qs[i] + ", ");
+					}
+				}
+			} else {
+				System.out.println("you have no messages waiting for you :(");
+			}
+			m = client.getMessage(client.getId());
+			System.out.println("found message: " + m.toString());
+			client.deleteQueue(q);
+			client.deleteQueue(q);
+			m = client.getMessage(client.getId() + 1);
 		} catch(Exception e) {
-			System.err.println(e.getLocalizedMessage);
+			System.err.println(e.getLocalizedMessage());
 			System.exit(-1);
 		}
 	}

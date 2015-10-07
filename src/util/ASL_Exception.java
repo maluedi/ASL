@@ -16,8 +16,6 @@ public class ASL_Exception extends Exception {
 	public String getLocalizedMessage(){
 		String msg = "";
 		switch(errCode){
-		case 0:
-			msg = "Internal Error"; break;
 		case 1:
 			msg = "Queue does not exist"; break;
 		case 2:
@@ -26,6 +24,10 @@ public class ASL_Exception extends Exception {
 			msg = "Receiver does not exist"; break;
 		case 4:
 			msg = "Queue is empty"; break;
+		case 5:
+			msg = "No message from this sender"; break;
+		case 6:
+			msg = "Internal Error"; break;
 		}
 		return msg;
 	}
