@@ -303,14 +303,14 @@ public class ASL_Client {
 			client.register();
 			System.out.println("your id is: " + client.getId());
 			int q = client.createQueue();
-			int q2 = client.createQueue();
-			int q3 = client.createQueue();
+//			int q2 = client.createQueue();
+//			int q3 = client.createQueue();
 			System.out.println("you created queue: " + q);
 			client.push(q, "test message");
 			System.out.println("sent message 'test message' to queue " + q);
 			client.push(q, client.getId(), "message to receiver " + client.getId());
-			//client.push(q2, client.getId(), "message to queue " + q2);
-			//client.push(q3, client.getId(), "message to queue " + q3);
+//			client.push(q2, client.getId(), "message to queue " + q2);
+//			client.push(q3, client.getId(), "message to queue " + q3);
 			System.out.println("sent message 'test message' to queue " + q + " and receiver " + client.getId());
 			ASL_Message m = client.peek(q);
 			System.out.println("peeked message: \n" + m.toString());
