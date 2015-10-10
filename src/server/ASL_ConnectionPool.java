@@ -8,60 +8,61 @@ public class ASL_ConnectionPool {
 	
 	private BlockingQueue<Connection> pool;
 	
-	private int maxPoolSize;
-	private int initialPoolSize;
-	private int currentPoolSize;
+	private int poolSize;
 	
 	private String dbUrl;
 	private String dbUser;
 	private String dbPassword;
+	//private String driverClassName;
 	
-	public ASL_ConnectionPool(int maxPoolSize, int initialPoolSize, String url, String user, 
-			String password, String driverClassName) throws ClassNotFoundException, SQLException{
-		this.maxPoolSize = maxPoolSize;
-		this.initialPoolSize = initialPoolSize;
+	public ASL_ConnectionPool(int poolSize, String url, String user, 
+			String password, String driverClassName) throws ClassNotFoundException {
+		this.poolSize = poolSize;
 		
 		this.dbUrl = url;
 		this.dbUser = user;
 		this.dbPassword = password;
+		//this.driverClassName = driverClassName;
 		
-		this.pool = new ArrayBlockingQueue<Connection>(maxPoolSize, true);
-		
-		initPool(driverClassName);
-	}
-	
-	private void initPool(String driverClassName) throws ClassNotFoundException, SQLException{
+		this.pool = new ArrayBlockingQueue<Connection>(poolSize, true);
 		Class.forName(driverClassName);
 		
-		for(int i = 0; i < initialPoolSize; i++){
-			openConnection();
-		}
+		//initPool(driverClassName);
 	}
 	
-	private synchronized void openConnection() throws SQLException{
-		if(currentPoolSize >= maxPoolSize){ 
-			return; 
-		}
+	public void initPool() throws SQLException{
 		
-		Connection conn = DriverManager.getConnection(dbUrl,dbUser,dbPassword);
-		if(pool.offer(conn)){
-			currentPoolSize++;
+		for(int i = 0; i < poolSize; i++){
+			Connection conn = DriverManager.getConnection(dbUrl,dbUser,dbPassword);
+			pool.offer(conn);
 		}
 	}
 	
 	public Connection borrowConnection() throws InterruptedException, SQLException{
-		if(pool.isEmpty() && currentPoolSize < maxPoolSize){
-			openConnection();
-		}
-		
 		// wait until connection becomes available
-		Connection c = pool.take();
-		return c;
+		Connection conn = null;
+		conn = pool.take();
+		if(!conn.isValid(2)){
+			conn.close();
+			conn = DriverManager.getConnection(dbUrl,dbUser,dbPassword);
+		}
+		return conn;
 	}
 	
 	public void returnConnection(Connection conn){
 		if(conn != null){
 			pool.offer(conn);
+		}
+	}
+	
+	public void closePool(){
+		Connection conn = null;
+		while((conn = pool.poll()) != null){
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

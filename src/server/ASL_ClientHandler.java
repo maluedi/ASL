@@ -8,18 +8,25 @@ import java.net.Socket;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 import util.ASL_Util;
 
 public class ASL_ClientHandler implements Runnable {
 
 	private Socket socket = null;
+	private BlockingQueue<Socket> socketQueue;
 	private int command;
 
 	private ASL_ConnectionPool pool;
 
 	public ASL_ClientHandler(Socket socket, ASL_ConnectionPool pool) {
 		this.socket = socket;
+		this.pool = pool;
+	}
+	
+	public ASL_ClientHandler(BlockingQueue<Socket> socketQueue, ASL_ConnectionPool pool) {
+		this.socketQueue = socketQueue;
 		this.pool = pool;
 	}
 
@@ -233,8 +240,8 @@ public class ASL_ClientHandler implements Runnable {
 		} 
 		out.flush();
 	}
-
-	public void run() {
+	
+	private void process(Socket socket){
 		try (
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -258,4 +265,22 @@ public class ASL_ClientHandler implements Runnable {
 			}
 		}
 	}
+
+	@Override
+	public void run() {
+		if(socketQueue != null){
+			while(!Thread.currentThread().isInterrupted()){
+				try {
+					socket = socketQueue.take();
+					process(socket);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
+			System.out.println(Thread.currentThread().getName() + " shutting down");
+		} else {
+			process(socket);
+		}
+	}
+	
 }
