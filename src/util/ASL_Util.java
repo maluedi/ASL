@@ -6,11 +6,11 @@ public class ASL_Util {
 	public static final int PUSH = 1;
 	public static final int POLL = 2;
 	public static final int PEEK = 3;
-	public static final int CQUEUE = 4;
-	public static final int DQUEUE = 5;
-	public static final int GQUEUE = 6;
-	public static final int GMSG = 7;
-	public static final int RUSER = 8;
+	public static final int CREATE_QUEUE = 4;
+	public static final int DELETE_QUEUE = 5;
+	public static final int GET_QUEUES = 6;
+	public static final int GET_MESSAGE = 7;
+	public static final int REGISTER_USER = 8;
 	
 	//error codes
 	public static final int INTERNAL_ERROR = 6;
