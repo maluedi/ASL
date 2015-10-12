@@ -6,9 +6,14 @@ import java.io.*;
 //import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+//import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
+//import java.util.Date;
 
 import util.ASL_Util;
 
@@ -20,13 +25,15 @@ import util.ASL_Util;
  */
 public class ASL_Worker implements Runnable {
 
-	private BlockingQueue<Socket> socketQueue;
+	private BlockingQueue<ASL_Tuple> socketQueue;
 	private int command;
 
 	private ASL_ConnectionPool pool;
 	
 	private boolean working;
 	private Thread workerThread;
+	
+	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
 	/**
 	 * Creates a new ASL_Worker which takes its requests from the socketQueue
@@ -37,7 +44,7 @@ public class ASL_Worker implements Runnable {
 	 * @param pool
 	 *            connection pool to the database
 	 */
-	public ASL_Worker(BlockingQueue<Socket> socketQueue, ASL_ConnectionPool pool) {
+	public ASL_Worker(BlockingQueue<ASL_Tuple> socketQueue, ASL_ConnectionPool pool) {
 		this.socketQueue = socketQueue;
 		this.pool = pool;
 	}
@@ -146,7 +153,12 @@ public class ASL_Worker implements Runnable {
 					result.add(rs.getInt("queue"));
 					result.add(rs.getInt("sender"));
 					result.add(rs.getInt("receiver"));
-					result.add(rs.getString("entrytime"));
+					try {
+						result.add(df.parse(rs.getString("entrytime")).getTime());
+					} catch (ParseException e) {
+						e.printStackTrace();
+						result.add(0);
+					}
 					result.add(rs.getString("message"));
 				} else {
 					err = ASL_Util.INTERNAL_ERROR;
@@ -172,7 +184,12 @@ public class ASL_Worker implements Runnable {
 						result.add(rs.getInt("queue"));
 						result.add(rs.getInt("sender"));
 						result.add(rs.getInt("receiver"));
-						result.add(rs.getString("entrytime"));
+						try {
+							result.add(df.parse(rs.getString("entrytime")).getTime());
+						} catch (ParseException e) {
+							e.printStackTrace();
+							result.add(0);
+						}
 						result.add(rs.getString("message"));
 					} else {
 						err = ASL_Util.NO_MESSAGE_FROM_SENDER;
@@ -252,7 +269,7 @@ public class ASL_Worker implements Runnable {
 				out.writeInt((int) result.get(0)); 		//queue
 				out.writeInt((int) result.get(1));		//sender
 				out.writeInt((int) result.get(2));		//receiver
-				out.writeUTF((String) result.get(3));	//time stamp
+				out.writeLong((long) result.get(3));	//time stamp
 				out.writeUTF((String) result.get(4));	//message
 			case ASL_Util.CREATE_QUEUE:
 				out.writeInt((int) result.get(0));		//queue id
@@ -305,7 +322,10 @@ public class ASL_Worker implements Runnable {
 		while (working) {
 			try {
 				//take socket
-				Socket socket = socketQueue.take();
+				ASL_Tuple req = socketQueue.take();
+				Socket socket = req.s;
+				long reqID = req.id;
+				System.out.println(Thread.currentThread().getName() + ": request " + reqID);
 				//process the request
 				process(socket);
 				//close socket

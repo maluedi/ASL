@@ -17,8 +17,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ASL_Listener implements Runnable {
 	
 	private int portNumber;
-	private BlockingQueue<Socket> queue;
+	private BlockingQueue<ASL_Tuple> queue;
 	private ServerSocket serverSocket;
+	
+	private long serial;
 	
 	public boolean listening;
 	
@@ -32,8 +34,9 @@ public class ASL_Listener implements Runnable {
 	 */
 	public ASL_Listener(int portNumber) throws IOException{
 		this.portNumber = portNumber;
-		queue = new LinkedBlockingQueue<Socket>();
+		queue = new LinkedBlockingQueue<ASL_Tuple>();
 		serverSocket = new ServerSocket(portNumber);
+		serial = 0;
 	}
 	
 	/**
@@ -52,7 +55,7 @@ public class ASL_Listener implements Runnable {
 	 * @return
 	 * 			  the queue with the accepted sockets
 	 */
-	public BlockingQueue<Socket> getQueue(){
+	public BlockingQueue<ASL_Tuple> getQueue(){
 		return queue;
 	}
 
@@ -65,9 +68,10 @@ public class ASL_Listener implements Runnable {
 		try{
 			while (listening) {
 				Socket socket = serverSocket.accept();
-				if(!queue.offer(socket)){
+				if(!queue.offer(new ASL_Tuple(socket,++serial))){
 					socket.close();
 				}
+				System.out.println("accepted request " + serial);
 			}
 		} catch (SocketException e) {
 			// shutdown

@@ -1,4 +1,6 @@
-package util;
+package client;
+
+import util.ASL_Util;
 
 /**
  * @author Marcel Lüdi

@@ -8,8 +8,6 @@ import java.net.UnknownHostException;
 //import java.util.Date;
 import java.io.*;
 
-import util.ASL_Exception;
-import util.ASL_Message;
 import util.ASL_Util;
 
 /**
@@ -218,7 +216,7 @@ public class ASL_Client {
 				int q = in.readInt();		//queue
 				int s = in.readInt();		//sender
 				int r = in.readInt();		//receiver
-				String t = in.readUTF();	//time stamp
+				long t = in.readLong();	//time stamp
 				String m = in.readUTF();	//message
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -278,7 +276,7 @@ public class ASL_Client {
 				int q = in.readInt();		//queue
 				int s = in.readInt();		//sender
 				int r = in.readInt();		//receiver
-				String t = in.readUTF();	//time stamp
+				long t = in.readLong();	//time stamp
 				String m = in.readUTF();	//message
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -370,7 +368,7 @@ public class ASL_Client {
 				int q = in.readInt();				//queue
 				int s = in.readInt();				//sender (=sender from before)     //
 				int r = in.readInt();				//receiver (=receiver from before) //these two could be omitted
-				String t = in.readUTF();			//time stamp
+				long t = in.readLong();			//time stamp
 				String m = in.readUTF();			//message
 				result = new ASL_Message(q,s,r,t,m);
 			} else {
@@ -392,7 +390,6 @@ public class ASL_Client {
 		}
 		String host = args[0];
 		int port = Integer.parseInt(args[1]);
-		
 		ASL_Client client = new ASL_Client(host,port);
 		try {
 			client.register();

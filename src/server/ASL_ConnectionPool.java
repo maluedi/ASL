@@ -79,8 +79,15 @@ public class ASL_ConnectionPool {
 		conn = pool.take();
 		
 		// check if the connection is valid and replace it if necessary
-		if(!conn.isValid(2)){
-			conn.close();
+		if(conn == null || !conn.isValid(2)){
+			if(conn != null){
+				try {
+					conn.close();
+				} catch (SQLException e) {
+					System.err.println(e.getLocalizedMessage());
+					e.printStackTrace();
+				}
+			}
 			conn = DriverManager.getConnection(dbUrl,dbUser,dbPassword);
 		}
 		return conn;
@@ -93,9 +100,7 @@ public class ASL_ConnectionPool {
 	 * 			  the returned connection
 	 */
 	public void returnConnection(Connection conn){
-		if(conn != null){
-			pool.offer(conn);
-		}
+		pool.offer(conn);
 	}
 	
 	/**
@@ -108,6 +113,7 @@ public class ASL_ConnectionPool {
 				conn.close();
 			} catch (SQLException e) {
 				System.err.println(e.getLocalizedMessage());
+				e.printStackTrace();
 			}
 		}
 	}
