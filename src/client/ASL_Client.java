@@ -15,7 +15,7 @@ import util.ASL_Util;
 /**
  * @author Marcel Lüdi
  * 
- * Generates requests for the middle ware
+ * Generates requests for the middle ware 
  *
  */
 public class ASL_Client {

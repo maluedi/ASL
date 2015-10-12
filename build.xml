@@ -10,20 +10,19 @@
   <property name="client-main" value="client.${client}"/>
   <property name="server-main" value="server.${server}"/>
 
-  <target name="compile_client" description="compiles the source">
+  <target name="build" description="compiles the source">
     <!-- Compile the java code from ${src} into ${build} -->
+    <mkdir dir="${build.dir}/util"/>
+	<javac srcdir="${src.dir}/util" destdir="${build.dir}" includeantruntime="false"/>
     <mkdir dir="${build.dir}/client"/>
     <javac srcdir="${src.dir}/client" destdir="${build.dir}" includeantruntime="false" />
-  </target>
-  
-  <target name="compile_server" description="compiles the source">
-    <!-- Compile the java code from ${src} into ${build} -->
     <mkdir dir="${build.dir}/server"/>
     <javac srcdir="${src.dir}/server" destdir="${build.dir}" includeantruntime="false" />
   </target>
 
-  <target name="jar_client" depends="compile_client" description="generate a jar executable" >
-    <!-- Put everything in into a executable jar file -->
+  <target name="jar_client" depends="build" description="generate a jar executable" >
+    <!-- Put everything into a executable jar file -->
+	<delete file="${build.dir}/${client}.jar"/>
     <jar jarfile="${build.dir}/${client}.jar" basedir="${build.dir}" filesetmanifest="mergewithoutmain">
 	  <manifest>
 	    <attribute name="Main-Class" value="${client-main}"/>
@@ -33,8 +32,9 @@
 	</jar>
   </target>
   
-  <target name="jar_server" depends="compile_server" description="generate a jar executable" >
-    <!-- Put everything in into a executable jar file -->
+  <target name="jar_server" depends="build" description="generate a jar executable" >
+    <!-- Put everything into a executable jar file -->
+	<delete file="${build.dir}/${server}.jar"/>
 	<jar jarfile="${build.dir}/${server}.jar" basedir="${build.dir}" filesetmanifest="mergewithoutmain">
 	  <manifest>
 	    <attribute name="Main-Class" value="${server-main}"/>
@@ -44,18 +44,22 @@
 	  <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/${postgresql}.jar"/>
 	</jar>
   </target>
+  
+  <target name="jar" depends="jar_server,jar_client" description="generate jars for client and server"/>
 
   <target name="run_client" depends="jar_client" description="run the client" >
     <java jar="${build.dir}/${client}.jar" fork="true">
       <arg value="${host}"/>
       <arg value="${port}"/>
-	  <arg value="${message}"/>
     </java>
   </target>
   
   <target name="run_server" depends="jar_server" description="run the server" >
     <java jar="${build.dir}/${server}.jar" fork="true">
 	  <arg value="${port}"/>
+	  <arg value="${db}"/>
+	  <arg value="${db_conns}"/>
+	  <arg value="${workers}"/>
 	</java>
   </target>
 

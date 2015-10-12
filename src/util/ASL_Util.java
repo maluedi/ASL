@@ -4,7 +4,7 @@ package util;
  * @author Marcel Lüdi
  * 
  * Helper class containing constants such as command and error codes
- * used in the message passing protocol
+ * used in the message passing protocol 
  *
  */
 public class ASL_Util {

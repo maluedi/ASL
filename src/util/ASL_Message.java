@@ -3,7 +3,7 @@ package util;
 /**
  * @author Marcel Lüdi
  * 
- * Container for messages retrieved from the message passing system
+ * Container for messages retrieved from the message passing system 
  *
  */
 public class ASL_Message {

@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author Marcel Lüdi
  * 
  * Listens on a port for incoming client requests and 
- * puts them on a queue for further processing
+ * puts them on a queue for further processing 
  *
  */
 public class ASL_Listener implements Runnable {

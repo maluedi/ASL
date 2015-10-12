@@ -4,7 +4,7 @@ package util;
  * @author Marcel Lüdi
  * 
  *         Exception for the different failure states of the message passing
- *         system
+ *         system 
  *
  */
 public class ASL_Exception extends Exception {

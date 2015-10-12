@@ -7,7 +7,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * @author Marcel Lüdi
  *
- * Manages the connections to the database
+ * Manages the connections to the database 
  */
 public class ASL_ConnectionPool {
 	

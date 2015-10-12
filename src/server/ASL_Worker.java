@@ -15,7 +15,7 @@ import util.ASL_Util;
 /**
  * @author Marcel Lüdi
  * 
- *         Processes the requests from the clients
+ *         Processes the requests from the clients 
  *
  */
 public class ASL_Worker implements Runnable {
@@ -223,6 +223,7 @@ public class ASL_Worker implements Runnable {
 			} catch (SQLException e) {
 				System.err.println(e.getLocalizedMessage());
 			}
+			pool.returnConnection(conn);
 		}
 		result.add(err);
 		return result;

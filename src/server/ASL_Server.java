@@ -6,7 +6,7 @@ import java.sql.SQLException;
 /**
  * @author Marcel Lüdi
  *
- * Message passing middleware for the Advanced Systems Lab Project
+ * Message passing middle ware for the Advanced Systems Lab Project
  */
 public class ASL_Server implements Runnable {
 
