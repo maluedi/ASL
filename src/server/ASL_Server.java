@@ -3,6 +3,9 @@ package server;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 /**
  * @author Marcel Lüdi
  *
@@ -10,11 +13,7 @@ import java.sql.SQLException;
  */
 public class ASL_Server implements Runnable {
 
-	private int portNumber;
-
-	public int getPort() {
-		return portNumber;
-	}
+	public final int portNumber;
 
 	private ASL_ConnectionPool pool;
 
@@ -22,8 +21,10 @@ public class ASL_Server implements Runnable {
 	private Thread[] workerThreads;
 	private ASL_Listener listener;
 
-	private Thread serverThread;
+	private Thread listenerThread;
 	private boolean running;
+	
+	private final Logger logger;
 
 	/**
 	 * Creates a new ASL_Server object connected to a database
@@ -58,16 +59,19 @@ public class ASL_Server implements Runnable {
 				driverClassName);
 
 		this.listener = new ASL_Listener(portNumber);
+		this.listenerThread = new Thread(this.listener, "ASL listener");
 
 		this.workers = new ASL_Worker[nWorkers];
 		this.workerThreads = new Thread[nWorkers];
 		for (int i = 0; i < this.workerThreads.length; i++) {
 			this.workers[i] = new ASL_Worker(this.listener.getQueue(),
-					this.pool);
+					this.pool, i);
 			this.workerThreads[i] = new Thread(this.workers[i], "ASL worker "
 					+ i);
 			this.workerThreads[i].setDaemon(true);
 		}
+		
+		this.logger = LogManager.getLogger("ASL Server");
 	}
 
 	/* (non-Javadoc)
@@ -75,8 +79,9 @@ public class ASL_Server implements Runnable {
 	 */
 	@Override
 	public void run() {
-		serverThread = Thread.currentThread();
-		System.out.println("starting server...");
+		//listenerThread = Thread.currentThread();
+		//System.out.println("starting server...");
+		logger.info("starting server");
 		
 		// fill the connection pool
 		try {
@@ -90,11 +95,15 @@ public class ASL_Server implements Runnable {
 		for (int i = 0; i < workerThreads.length; i++) {
 			workerThreads[i].start();
 		}
-		System.out.println("server is running");
+		
+		// start listener
+		listenerThread.start();
+		//System.out.println("server is running");
 		running = true;
+		logger.info("server is running");
 		
 		//run listener on main thread
-		listener.run();
+		//listener.run();
 	}
 
 	
@@ -105,7 +114,8 @@ public class ASL_Server implements Runnable {
 		if (!running) {
 			return;
 		} else {
-			System.out.println("server shutting down...");
+			//System.out.println("server shutting down...");
+			logger.info("server shutting down");
 			// stop workers
 			for (int i = 0; i < workers.length; i++) {
 				workers[i].stop();
@@ -123,31 +133,32 @@ public class ASL_Server implements Runnable {
 			listener.stop();
 			try {
 				// wait for listener to settle down
-				serverThread.join(4000);
+				listenerThread.join(4000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			running = false;
-			System.out.println("server stopped");
+			//System.out.println("server stopped");
+			logger.info("server stopped");
 		}
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 4) {
+		if (args.length < 6) {
 			System.err
-					.println("Usage: ASL_Server <port> <db-ip:db-port> <# of db-connections> <# of workers>");
+					.println("Usage: ASL_Server <port> <db-ip:db-port> <db-user> <db-password> <# of db-connections> <# of workers>");
 			System.exit(-1);
 		}
 		int port = Integer.parseInt(args[0]);
 		String url = "jdbc:postgresql://" + args[1] + "/ASL";
-		String user = "postgres";
-		String password = "qwer1";
+		String user = args[2];//"postgres";
+		String password = args[3];//"qwer1";
 		String driverName = "org.postgresql.Driver";
-		int nConns = Integer.parseInt(args[2]);
-		int nWorkers = Integer.parseInt(args[3]);
+		int nConns = Integer.parseInt(args[4]);
+		int nWorkers = Integer.parseInt(args[5]);
 
 		try {
-			ASL_Server server = new ASL_Server(port, url, user, password,
+			final ASL_Server server = new ASL_Server(port, url, user, password,
 					driverName, nConns, nWorkers);
 
 			Runtime.getRuntime().addShutdownHook(new Thread() {

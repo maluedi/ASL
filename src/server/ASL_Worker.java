@@ -10,10 +10,12 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-//import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
-//import java.util.Date;
+
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import util.ASL_Util;
 
@@ -27,13 +29,18 @@ public class ASL_Worker implements Runnable {
 
 	private BlockingQueue<ASL_Tuple> socketQueue;
 	private int command;
+	private int error;
 
 	private ASL_ConnectionPool pool;
 	
 	private boolean working;
 	private Thread workerThread;
 	
+	public final int id;
+	
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	private final Logger logger;
+	private long[] t = new long[6];
 
 	/**
 	 * Creates a new ASL_Worker which takes its requests from the socketQueue
@@ -47,6 +54,26 @@ public class ASL_Worker implements Runnable {
 	public ASL_Worker(BlockingQueue<ASL_Tuple> socketQueue, ASL_ConnectionPool pool) {
 		this.socketQueue = socketQueue;
 		this.pool = pool;
+		this.logger = LogManager.getLogger("ASL worker");
+		this.id = 0;
+	}
+
+	/**
+	 * Creates a new ASL_Worker which takes its requests from the socketQueue
+	 * and data base connections from the pool
+	 * 
+	 * @param socketQueue
+	 *            queue where sockets to clients get put after accepting
+	 * @param pool
+	 *            connection pool to the database
+	 * @param id
+	 * 			  the id of the worker
+	 */
+	public ASL_Worker(BlockingQueue<ASL_Tuple> socketQueue, ASL_ConnectionPool pool, int id) {
+		this.socketQueue = socketQueue;
+		this.pool = pool;
+		this.id = id;
+		this.logger = LogManager.getLogger("ASL worker " + id);
 	}
 
 	/**
@@ -140,10 +167,11 @@ public class ASL_Worker implements Runnable {
 		Statement st = null;
 		ResultSet rs = null;
 
-		int err = 0;
+		error = 0;
 
 		try {
 			conn = pool.borrowConnection();
+			t[3] = System.currentTimeMillis();
 			st = conn.createStatement();
 			boolean res = st.execute(sql);
 			switch (command) {
@@ -156,19 +184,20 @@ public class ASL_Worker implements Runnable {
 					try {
 						result.add(df.parse(rs.getString("entrytime")).getTime());
 					} catch (ParseException e) {
-						e.printStackTrace();
-						result.add(0);
+						//e.printStackTrace();
+						logger.error(e.getLocalizedMessage());
+						result.add((long) 0);
 					}
 					result.add(rs.getString("message"));
 				} else {
-					err = ASL_Util.INTERNAL_ERROR;
+					error = ASL_Util.INTERNAL_ERROR;
 				}
 				break;
 			case ASL_Util.CREATE_QUEUE:
 				if (res && (rs = st.getResultSet()).next()) {
 					result.add(rs.getInt(1));
 				} else {
-					err = ASL_Util.INTERNAL_ERROR;
+					error = ASL_Util.INTERNAL_ERROR;
 				}
 				break;
 			case ASL_Util.GET_QUEUES:
@@ -192,17 +221,17 @@ public class ASL_Worker implements Runnable {
 						}
 						result.add(rs.getString("message"));
 					} else {
-						err = ASL_Util.NO_MESSAGE_FROM_SENDER;
+						error = ASL_Util.NO_MESSAGE_FROM_SENDER;
 					}
 				} else {
-					err = ASL_Util.INTERNAL_ERROR;
+					error = ASL_Util.INTERNAL_ERROR;
 				}
 				break;
 			case ASL_Util.REGISTER_USER:
 				if (res && (rs = st.getResultSet()).next()) {
 					result.add(rs.getInt(1));
 				} else {
-					err = ASL_Util.INTERNAL_ERROR;
+					error = ASL_Util.INTERNAL_ERROR;
 				}
 				break;
 			}
@@ -210,25 +239,26 @@ public class ASL_Worker implements Runnable {
 		} catch (SQLException e) {
 			switch (Integer.parseInt(e.getSQLState())) {
 			case 23101:
-				err = ASL_Util.QUEUE_DOES_NOT_EXIST;
+				error = ASL_Util.QUEUE_DOES_NOT_EXIST;
 				break;
 			case 23102:
-				err = ASL_Util.SENDER_DOES_NOT_EXIST;
+				error = ASL_Util.SENDER_DOES_NOT_EXIST;
 				break;
 			case 23103:
-				err = ASL_Util.RECEIVER_DOES_NOT_EXIST;
+				error = ASL_Util.RECEIVER_DOES_NOT_EXIST;
 				break;
 			case 23104:
-				err = ASL_Util.QUEUE_IS_EMPTY;
+				error = ASL_Util.QUEUE_IS_EMPTY;
 				break;
 			default:
-				err = ASL_Util.INTERNAL_ERROR;
+				error = ASL_Util.INTERNAL_ERROR;
 				System.err.println(e.getLocalizedMessage());
 				break;
 			}
 		} catch (InterruptedException e) {
-			err = ASL_Util.INTERNAL_ERROR;
-			System.err.println(e.getLocalizedMessage());
+			error = ASL_Util.INTERNAL_ERROR;
+			//System.err.println(e.getLocalizedMessage());
+			logger.error(e.getLocalizedMessage());
 		} finally {
 			try {
 				if (rs != null) {
@@ -238,11 +268,12 @@ public class ASL_Worker implements Runnable {
 					st.close();
 				}
 			} catch (SQLException e) {
-				System.err.println(e.getLocalizedMessage());
+				//System.err.println(e.getLocalizedMessage());
+				logger.error(e.getLocalizedMessage());
 			}
 			pool.returnConnection(conn);
 		}
-		result.add(err);
+		//result.add(err);
 		return result;
 	}
 
@@ -259,9 +290,9 @@ public class ASL_Worker implements Runnable {
 	private void sendResult(List<Object> result, DataOutputStream out)
 			throws IOException {
 
-		int err = (int) result.get(result.size() - 1);
-		out.writeByte(err);								//error code (0 = OK)
-		if (err == 0) {
+		//int err = (int) result.get(result.size() - 1);
+		out.writeByte(error);								//error code (0 = OK)
+		if (error == 0) {
 			switch (command) {
 			case ASL_Util.POLL:
 			case ASL_Util.PEEK:
@@ -294,21 +325,30 @@ public class ASL_Worker implements Runnable {
 	 * 			  the socket from the client
 	 */
 	private void process(Socket socket) {
+		//Socket socket = request.s;
+		//long reqID = request.rcvTime;
 		try (
 			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 		) {
 			
 			// get request from client
+			//logger.trace("reading input: " + reqID);
+			t[1] = System.currentTimeMillis();
 			String sql = getSql(in);
 			
 			// get result from database
+			//logger.trace("starting db interaction: " + reqID);
+			t[2] = System.currentTimeMillis();
 			List<Object> result = getResult(sql);
 			
 			// send result to client
+			//logger.trace("sending result: " + reqID);
+			t[4] = System.currentTimeMillis();
 			sendResult(result, out);
 		} catch (IOException e) {
-			System.err.println(e.getLocalizedMessage());
+			//System.err.println(e.getLocalizedMessage());
+			logger.error(e.getLocalizedMessage());
 		}
 	}
 
@@ -323,19 +363,30 @@ public class ASL_Worker implements Runnable {
 			try {
 				//take socket
 				ASL_Tuple req = socketQueue.take();
-				Socket socket = req.s;
-				long reqID = req.id;
-				System.out.println(Thread.currentThread().getName() + ": request " + reqID);
+				t[0] = req.rcvTime;
+				
 				//process the request
-				process(socket);
+				//logger.trace("start processing: " + req.id);
+				//t[1] = System.currentTimeMillis();
+				process(req.s);
 				//close socket
-				socket.close();
+				req.finish();
+				//logger.trace("finished processing: " + req.id);
+				t[5] = System.currentTimeMillis();
+				
+				logger.trace(command + "," + error + "," + Arrays.toString(t));
+				
 			} catch (InterruptedException e) {
 				//server shutdown
 			} catch (IOException e) {
-				System.err.println(e.getLocalizedMessage()); // error in the client connection
+				//System.err.println(e.getLocalizedMessage()); // error in the client connection
+				logger.error(e.getLocalizedMessage());
+			} catch (Exception e){
+				//e.printStackTrace();
+				logger.error(e.getLocalizedMessage());
 			}
 		}
+		logger.info("shutting down");
 	}
 	
 	/**

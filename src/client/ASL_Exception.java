@@ -15,15 +15,7 @@ public class ASL_Exception extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private int errCode;
-
-	/**
-	 * @return
-	 * 			  the code of the exception type
-	 */
-	public int getErrCode() {
-		return errCode;
-	}
+	public final int errCode;
 
 	/**
 	 * Creates a new Exception with the specified error code

@@ -7,6 +7,10 @@ import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.*;
+
 /**
  * @author Marcel Lüdi
  * 
@@ -20,9 +24,11 @@ public class ASL_Listener implements Runnable {
 	private BlockingQueue<ASL_Tuple> queue;
 	private ServerSocket serverSocket;
 	
-	private long serial;
+//	private long serial;
 	
 	public boolean listening;
+	
+	private final Logger logger;
 	
 	/**
 	 * Creates a new ASL_Listener bound to the specified port number
@@ -36,7 +42,9 @@ public class ASL_Listener implements Runnable {
 		this.portNumber = portNumber;
 		queue = new LinkedBlockingQueue<ASL_Tuple>();
 		serverSocket = new ServerSocket(portNumber);
-		serial = 0;
+//		serial = 0;
+		
+		this.logger = LogManager.getLogger("ASL listener");
 	}
 	
 	/**
@@ -68,17 +76,21 @@ public class ASL_Listener implements Runnable {
 		try{
 			while (listening) {
 				Socket socket = serverSocket.accept();
-				if(!queue.offer(new ASL_Tuple(socket,++serial))){
+				//serial++;
+				long t1 = System.currentTimeMillis();
+				//logger.trace("accepted request: " + serial);
+				if(!queue.offer(new ASL_Tuple(socket,t1))){
 					socket.close();
 				}
-				System.out.println("accepted request " + serial);
 			}
 		} catch (SocketException e) {
 			// shutdown
 		}catch (IOException e) {
-			System.err.println(e.getLocalizedMessage());
-			e.printStackTrace();
+//			System.err.println(e.getLocalizedMessage());
+//			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		} 
+		logger.info("shutting down");
 	}
 	
 	/**
@@ -89,8 +101,9 @@ public class ASL_Listener implements Runnable {
 		try {
 			serverSocket.close(); //this gives a SocketException in the run() method if the thread is waiting for a connection
 		} catch (IOException e) {
-			System.err.println(e.getLocalizedMessage());
-			e.printStackTrace();
+//			System.err.println(e.getLocalizedMessage());
+//			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 	}
 
