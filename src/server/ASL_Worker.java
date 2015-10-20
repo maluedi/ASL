@@ -10,7 +10,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -39,6 +39,7 @@ public class ASL_Worker implements Runnable {
 	public final int id;
 	
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	private final Logger traceLogger;
 	private final Logger logger;
 	private long[] t = new long[6];
 
@@ -55,6 +56,7 @@ public class ASL_Worker implements Runnable {
 		this.socketQueue = socketQueue;
 		this.pool = pool;
 		this.logger = LogManager.getLogger("ASL worker");
+		this.traceLogger = LogManager.getLogger("trace");
 		this.id = 0;
 	}
 
@@ -74,6 +76,7 @@ public class ASL_Worker implements Runnable {
 		this.pool = pool;
 		this.id = id;
 		this.logger = LogManager.getLogger("ASL worker " + id);
+		this.traceLogger = LogManager.getLogger("trace");
 	}
 
 	/**
@@ -374,7 +377,7 @@ public class ASL_Worker implements Runnable {
 				//logger.trace("finished processing: " + req.id);
 				t[5] = System.currentTimeMillis();
 				
-				logger.trace(command + "," + error + "," + Arrays.toString(t));
+				traceLogger.trace(command + "," + error + "," + t[0] + "," + t[1] + "," + t[2] + "," + t[3] + "," + t[4] + "," + t[5]);
 				
 			} catch (InterruptedException e) {
 				//server shutdown

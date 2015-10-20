@@ -73,6 +73,15 @@ public class ASL_Client {
 	public int getId() {
 		return this.id;
 	}
+	
+	/**
+	 * Use on own risk! does not check if the user actually exists in the system.
+	 * @param id
+	 * 			  the new id of this client
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	/**
 	 * Creates a new queue in the message passing system
