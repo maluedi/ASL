@@ -76,13 +76,13 @@ public class ASL_Message {
 	@Override
 	public String toString() {
 		if(receiver != 0){
-			return new SimpleDateFormat("dd.MM.yy HH:mm:ss.SSS").format(timestamp) + ": \n" + 
+			return new SimpleDateFormat("dd.MM.yy HH:mm:ss").format(timestamp) + ": \n" + 
 					"\tsender:   " + sender + "\n" + 
 					"\treceiver: " + receiver + "\n" + 
 					"\tqueue:    " + queue + "\n" + 
 					"\tmessage:  " + message;
 		} else {
-			return new SimpleDateFormat("dd.MM.yy HH:mm:ss.SSS").format(timestamp) + ": \n" + 
+			return new SimpleDateFormat("dd.MM.yy HH:mm:ss").format(timestamp) + ": \n" + 
 					"\tsender:   " + sender + "\n" + 
 					"\tqueue:    " + queue + "\n" + 
 					"\tmessage:  " + message;

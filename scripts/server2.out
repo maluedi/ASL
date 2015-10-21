@@ -1,0 +1,21 @@
+[ASL Server] INFO  - starting server
+[ASL Server] INFO  - server is running
+[ASL Server] INFO  - server shutting down
+[ASL worker 2] INFO  - shutting down
+[ASL worker 1] INFO  - shutting down
+[ASL worker 4] INFO  - shutting down
+[ASL worker 0] INFO  - shutting down
+[ASL worker 5] INFO  - shutting down
+[ASL worker 6] INFO  - shutting down
+[ASL worker 3] INFO  - shutting down
+[ASL worker 7] INFO  - shutting down
+[ASL worker 10] INFO  - shutting down
+[ASL worker 8] INFO  - shutting down
+[ASL worker 9] INFO  - shutting down
+[ASL worker 11] INFO  - shutting down
+[ASL worker 12] INFO  - shutting down
+[ASL worker 13] INFO  - shutting down
+[ASL worker 14] INFO  - shutting down
+[ASL worker 15] INFO  - shutting down
+[ASL listener] INFO  - shutting down
+[ASL Server] INFO  - server stopped

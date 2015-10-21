@@ -60,9 +60,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 		return id;
 	}
@@ -108,9 +110,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 
 		return result;
@@ -140,9 +144,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 	}
 
@@ -179,9 +185,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 	}
 
@@ -239,9 +247,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 
 		return result;
@@ -299,9 +309,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 
 		return result;
@@ -351,9 +363,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+//			System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+//			System.err.println("I/O exception on connection to " + hostName);
 		}
 
 		return result;
@@ -396,9 +410,11 @@ public class ASL_Client {
 				throw new ASL_Exception(err);
 			}
 		} catch (UnknownHostException e) {
-			System.err.println("Unknown host: " + hostName);
-		} catch (IOException e1) {
-			System.err.println("I/O exception on connection to " + hostName);
+			e.printStackTrace();
+			//System.err.println("Unknown host: " + hostName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			//System.err.println("I/O exception on connection to " + hostName);
 		}
 
 		return result;

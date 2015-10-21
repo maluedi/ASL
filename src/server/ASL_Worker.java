@@ -184,13 +184,14 @@ public class ASL_Worker implements Runnable {
 					result.add(rs.getInt("queue"));
 					result.add(rs.getInt("sender"));
 					result.add(rs.getInt("receiver"));
-					try {
-						result.add(df.parse(rs.getString("entrytime")).getTime());
-					} catch (ParseException e) {
-						//e.printStackTrace();
-						logger.error(e.getLocalizedMessage());
-						result.add((long) 0);
-					}
+//					try {
+						//result.add(df.parse(rs.getString("entrytime")).getTime());
+						result.add(rs.getDate("entrytime").getTime());
+//					} catch (ParseException e) {
+//						//e.printStackTrace();
+//						logger.error(e.getLocalizedMessage());
+//						result.add((long) 0);
+//					}
 					result.add(rs.getString("message"));
 				} else {
 					error = ASL_Util.INTERNAL_ERROR;
@@ -309,10 +310,11 @@ public class ASL_Worker implements Runnable {
 				out.writeInt((int) result.get(0));		//queue id
 				break;
 			case ASL_Util.GET_QUEUES:
-				out.writeInt(result.size() - 1);		//number of queues
-				for (int i = 0; i < result.size() - 1; i++) {
+				out.writeInt(result.size());		//number of queues
+				for (int i = 0; i < result.size(); i++) {
 					out.writeInt((int) result.get(i));	//queue id
 				}
+				break;
 			case ASL_Util.REGISTER_USER:
 				out.writeInt((int) result.get(0));		//user id
 				break;
@@ -385,7 +387,7 @@ public class ASL_Worker implements Runnable {
 				//System.err.println(e.getLocalizedMessage()); // error in the client connection
 				logger.error(e.getLocalizedMessage());
 			} catch (Exception e){
-				//e.printStackTrace();
+				e.printStackTrace();
 				logger.error(e.getLocalizedMessage());
 			}
 		}
