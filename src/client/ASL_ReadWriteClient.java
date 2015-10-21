@@ -59,13 +59,13 @@ public class ASL_ReadWriteClient implements Runnable{
 				}
 				
 				effectiveWaitTime = waitTime - (System.currentTimeMillis()-t1);
-				if(waitTime > 0){
+				if(effectiveWaitTime > 0){
 					Thread.sleep(effectiveWaitTime);
 				} else {
-					logger.info("wait time too long");
+					logger.info("wait time too long: " + (waitTime-effectiveWaitTime));
 				}
 				
-				//logger.trace("start push");
+				//logger.info("push");
 				t0 = System.currentTimeMillis();
 				try{
 					client.push(sendQ, new String(tmpm));
@@ -79,12 +79,12 @@ public class ASL_ReadWriteClient implements Runnable{
 				traceLogger.trace(ASL_Util.PUSH + "," + err + "," + t0 + "," + t1);
 				
 				effectiveWaitTime = waitTime - (System.currentTimeMillis()-t1);
-				if(waitTime > 0){
+				if(effectiveWaitTime > 0){
 					Thread.sleep(effectiveWaitTime);
 				} else {
-					logger.info("wait time too long");
+					logger.info("wait time too long: " + (waitTime-effectiveWaitTime));
 				}
-//				logger.trace("start poll");
+				//logger.info("poll");
 				t0 = System.currentTimeMillis();
 				try{
 					client.poll(pubQ);
