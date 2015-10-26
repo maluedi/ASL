@@ -1,0 +1,5 @@
+option batch abort
+option confirm off
+open sftp://ec2-user@%1%/ -privatekey=%keyFile% -hostkey="*"
+get -delete *.log "E:\Users\Marcel\Documents\ETH\ASL\logs\%experimentID%\"
+exit
